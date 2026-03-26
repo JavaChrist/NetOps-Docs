@@ -20,6 +20,8 @@ import {
   UNITEP_METIERS,
   UNITEP_REVISION_NOTE,
 } from '../../utils/unitEepTemplateCopy'
+import { UNITEP_THEME as U } from '../../utils/unitEepTheme'
+import { EdfHeaderLogoLockup } from '../branding/EdfHeaderLogoLockup'
 
 const ALL_ACCESS_LEVELS: AccessibilityLevel[] = [
   'LIBRE',
@@ -42,70 +44,127 @@ export function EdfDigitPreview({ doc }: { doc: EdfDigitDocument }) {
     ["Date d'applicabilité", h.applicabilityDate],
   ]
 
+  const bc = { borderColor: U.border }
+
   return (
-    <article className="border-2 border-[#00539f] bg-white text-[11pt] text-black shadow-none">
-      <header className="border-b-2 border-[#00539f] bg-white px-3 py-2 text-[10pt] leading-snug">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0 max-w-[65%]">
-            <p className="m-0 text-[11px] font-bold leading-tight text-[#00539f]">
-              Document DIGIT Accessibilité :
-            </p>
-            <p className="m-0 mt-1 text-[11pt] font-semibold leading-tight text-black">
-              {h.title || '—'}
-            </p>
-            {!h.isDigitDocument ? (
-              <p className="m-0 mt-1 text-[9pt] text-neutral-600">
-                Document non marqué DIGIT dans l’en-tête éditable.
-              </p>
-            ) : null}
+    <article
+      className="bg-white text-[11pt] shadow-none"
+      style={{
+        color: U.text,
+        borderWidth: 2,
+        borderStyle: 'solid',
+        borderColor: U.edfBlue,
+      }}
+    >
+      <header
+        className="text-[10pt] leading-snug"
+        style={{
+          borderBottomWidth: 2,
+          borderBottomStyle: 'solid',
+          borderBottomColor: U.edfBlue,
+        }}
+      >
+        <div className="bg-white px-3 pt-2 pb-2">
+          <div
+            className="mb-1 grid w-full text-[10pt] leading-tight text-black"
+            style={{
+              gridTemplateColumns: '22% 56% 22%',
+            }}
+          >
+            <div className="text-left">Document DIGIT</div>
+            <div className="text-center">Accessibilité :</div>
+            <div />
           </div>
-          <div className="shrink-0 text-[10pt] leading-snug">
-            <div>
-              <span className="text-neutral-600">Indice :</span>{' '}
-              <span className="font-semibold">{h.indice || '—'}</span>
-            </div>
-            <div>
-              <span className="text-neutral-600">Nb Pages :</span>{' '}
-              {h.pageCount || '—'}
-            </div>
-            <div>
-              <span className="text-neutral-600">Nb Annexe(s) :</span>{' '}
-              {h.annexCount || '—'}
-            </div>
-            <div className="max-w-[280px]">
-              <span className="text-neutral-600">Référence :</span>{' '}
-              {h.reference || '—'}
-            </div>
-          </div>
+          <table
+            className="w-full border-collapse border border-black bg-white text-black [table-layout:fixed]"
+          >
+            <colgroup>
+              <col style={{ width: '22%' }} />
+              <col style={{ width: '56%' }} />
+              <col style={{ width: '22%' }} />
+            </colgroup>
+            <tbody>
+              <tr className="align-middle">
+                <td
+                  rowSpan={2}
+                  className="border border-black px-2 py-2 text-center align-middle"
+                >
+                  <div className="flex justify-center">
+                    <EdfHeaderLogoLockup iconSize={40} />
+                  </div>
+                </td>
+                <td className="border border-black px-2 py-2 text-center align-middle">
+                  <p className="m-0 text-[11pt] font-bold leading-snug">
+                    {h.title || '—'}
+                  </p>
+                  {!h.isDigitDocument ? (
+                    <p className="m-0 mt-1 text-[9pt] text-neutral-600">
+                      Document non marqué DIGIT dans l’en-tête éditable.
+                    </p>
+                  ) : null}
+                </td>
+                <td
+                  rowSpan={2}
+                  className="border border-black px-2 py-2 text-center align-middle"
+                >
+                  <div className="space-y-0.5 text-[9.5pt] leading-snug">
+                    <div>
+                      Indice : <span className="font-semibold">{h.indice || '—'}</span>
+                    </div>
+                    <div>Nb Pages : {h.pageCount || '—'}</div>
+                    <div>Nb Annexe(s) : {h.annexCount || '—'}</div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td className="border border-black px-2 py-2 text-center align-middle">
+                  <p className="m-0 text-[8.5pt] leading-snug">
+                    Référence : {h.reference || '—'}
+                  </p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p className="m-0 mt-2 text-[9.5pt] font-semibold">{UNITEP_DTEO_ADDRESS}</p>
+          <p className="m-0 mt-1 text-[9.5pt] text-neutral-800">
+            Page 1 / {h.pageCount?.trim() ? h.pageCount : '?'}
+          </p>
         </div>
-        <p className="m-0 mt-2 text-[9.5pt] font-medium text-black">
-          {UNITEP_DTEO_ADDRESS}
-        </p>
-        <p className="m-0 mt-1 text-[9.5pt] text-neutral-700">
-          Page 1 / {h.pageCount?.trim() ? h.pageCount : '?'}
-        </p>
-        <p className="m-0 mt-2 text-[8.5pt] leading-snug text-neutral-800">
-          {UNITEP_COPYRIGHT}
-        </p>
-        <p className="m-0 mt-1 text-[8.5pt] leading-snug text-neutral-800">
-          {UNITEP_EDF_SA_LEGAL}
-        </p>
-        <p className="m-0 mt-2 text-[8.5pt] font-bold uppercase leading-tight text-black">
-          {UNITEP_DIRECTION_LINE}
-        </p>
-        <p className="m-0 mt-1 text-[11pt] font-bold tracking-wide">
-          {UNITEP_METIERS}
-        </p>
+        <div className="bg-white px-3 pb-2 pt-2">
+          <p className="m-0 text-[8.5pt] leading-snug text-neutral-900">
+            {UNITEP_COPYRIGHT}
+          </p>
+          <p className="m-0 mt-1 text-[8.5pt] leading-snug text-neutral-900">
+            {UNITEP_EDF_SA_LEGAL}
+          </p>
+          <p className="m-0 mt-2 text-[8.5pt] font-bold uppercase leading-tight tracking-wide">
+            {UNITEP_DIRECTION_LINE}
+          </p>
+          <p className="m-0 mt-1 text-[11pt] font-bold tracking-wide">{UNITEP_METIERS}</p>
+        </div>
       </header>
 
-      <table className="w-full border-collapse border border-neutral-500 text-[10pt]">
+      <table
+        className="w-full border-collapse text-[10pt] [table-layout:fixed]"
+        style={{ ...bc, borderWidth: 1, borderStyle: 'solid' }}
+      >
+        <colgroup>
+          <col style={{ width: '35%' }} />
+          <col style={{ width: '65%' }} />
+        </colgroup>
         <tbody>
           {secondaryRows.map(([k, v]) => (
             <tr key={k}>
-              <th className="w-[32%] border border-neutral-400 bg-[#e8e8e8] px-2 py-1 text-left align-top font-semibold">
+              <th
+                className="border px-2 py-1.5 text-left align-top font-semibold"
+                style={{ ...bc, backgroundColor: U.headerGray, color: U.text }}
+              >
                 {k}
               </th>
-              <td className="border border-neutral-400 px-2 py-1 align-top">
+              <td
+                className="border px-2 py-1.5 align-top whitespace-pre-wrap"
+                style={{ ...bc, backgroundColor: '#ffffff' }}
+              >
                 {v || '—'}
               </td>
             </tr>
@@ -113,29 +172,67 @@ export function EdfDigitPreview({ doc }: { doc: EdfDigitDocument }) {
         </tbody>
       </table>
 
-      <section className="border-b border-neutral-300 px-3 py-3">
-        <h2 className="m-0 border-b border-neutral-300 pb-1 text-[11px] font-bold uppercase text-[#003d6b]">
+      <section className="border-b border-solid px-3 py-3" style={{ borderColor: U.border }}>
+        <h2
+          className="m-0 border-b-2 border-solid pb-1 text-[11px] font-bold uppercase"
+          style={{ color: U.sectionTitleOrange, borderBottomColor: U.accentOrange }}
+        >
           Historique des indices
         </h2>
         <p className="m-0 mt-2 text-[9pt] italic text-neutral-700">
           {UNITEP_REVISION_NOTE}
         </p>
         <div className="mt-2 overflow-x-auto">
-          <table className="w-full min-w-[700px] border-collapse border border-neutral-600 text-[10pt]">
+          <table
+            className="w-full min-w-[720px] border-collapse text-[10pt] [table-layout:fixed]"
+            style={{ ...bc, borderWidth: 1, borderStyle: 'solid' }}
+          >
+            <colgroup>
+              <col style={{ width: '7%' }} />
+              <col style={{ width: '11%' }} />
+              <col style={{ width: '38%' }} />
+              <col style={{ width: '14%' }} />
+              <col style={{ width: '15%' }} />
+              <col style={{ width: '15%' }} />
+            </colgroup>
             <thead>
-              <tr className="bg-[#003d6b] text-white">
-                <th className="border border-neutral-500 px-1 py-1">Ind.</th>
-                <th className="border border-neutral-500 px-1 py-1">Date</th>
-                <th className="border border-neutral-500 px-1 py-1">
+              <tr
+                style={{ backgroundColor: U.sectionTitleOrange, color: U.onNavy }}
+              >
+                <th
+                  className="border px-1 py-1.5 text-center text-[9.5pt] font-semibold"
+                  style={{ ...bc }}
+                >
+                  Ind.
+                </th>
+                <th
+                  className="border px-1 py-1.5 text-center text-[9.5pt] font-semibold"
+                  style={{ ...bc }}
+                >
+                  Date
+                </th>
+                <th
+                  className="border px-1 py-1.5 text-left text-[9.5pt] font-semibold"
+                  style={{ ...bc }}
+                >
                   Nature des dernières évolutions
                 </th>
-                <th className="border border-neutral-500 px-1 py-1">
+                <th
+                  className="border px-1 py-1.5 text-left text-[9.5pt] font-semibold"
+                  style={{ ...bc }}
+                >
                   Rédacteur(s)
                 </th>
-                <th className="border border-neutral-500 px-1 py-1">
+                <th
+                  className="border px-1 py-1.5 text-left text-[9.5pt] font-semibold"
+                  style={{ ...bc }}
+                >
                   Vérificateur(s)
                 </th>
-                <th className="border border-neutral-500 px-1 py-1">
+                <th
+                  className="border px-1 py-1.5 text-left text-[9.5pt] font-semibold"
+                  style={{ ...bc }}
+                >
                   Approbateur
                 </th>
               </tr>
@@ -143,22 +240,40 @@ export function EdfDigitPreview({ doc }: { doc: EdfDigitDocument }) {
             <tbody>
               {doc.revisionHistory.map((r) => (
                 <tr key={r.id}>
-                  <td className="border border-neutral-400 px-1 py-1 align-top">
+                  <td
+                    className="border px-1 py-1.5 align-top text-center"
+                    style={{ ...bc, backgroundColor: '#fff' }}
+                  >
                     {r.indice}
                   </td>
-                  <td className="border border-neutral-400 px-1 py-1 align-top">
+                  <td
+                    className="border px-1 py-1.5 align-top text-center"
+                    style={{ ...bc, backgroundColor: '#fff' }}
+                  >
                     {r.date}
                   </td>
-                  <td className="border border-neutral-400 px-1 py-1 align-top whitespace-pre-wrap">
+                  <td
+                    className="border px-1 py-1.5 align-top whitespace-pre-wrap"
+                    style={{ ...bc, backgroundColor: '#fff' }}
+                  >
                     {r.natureEvolution}
                   </td>
-                  <td className="border border-neutral-400 px-1 py-1 align-top">
+                  <td
+                    className="border px-1 py-1.5 align-top"
+                    style={{ ...bc, backgroundColor: '#fff' }}
+                  >
                     {r.redacteur}
                   </td>
-                  <td className="border border-neutral-400 px-1 py-1 align-top">
+                  <td
+                    className="border px-1 py-1.5 align-top"
+                    style={{ ...bc, backgroundColor: '#fff' }}
+                  >
                     {r.verificateur}
                   </td>
-                  <td className="border border-neutral-400 px-1 py-1 align-top">
+                  <td
+                    className="border px-1 py-1.5 align-top"
+                    style={{ ...bc, backgroundColor: '#fff' }}
+                  >
                     {r.approbateur}
                   </td>
                 </tr>
@@ -168,8 +283,11 @@ export function EdfDigitPreview({ doc }: { doc: EdfDigitDocument }) {
         </div>
       </section>
 
-      <section className="border-b border-neutral-300 px-3 py-3">
-        <h2 className="m-0 border-b border-neutral-300 pb-1 text-[11px] font-bold uppercase text-[#003d6b]">
+      <section className="border-b border-solid px-3 py-3" style={{ borderColor: U.border }}>
+        <h2
+          className="m-0 border-b-2 border-solid pb-1 text-[11px] font-bold uppercase"
+          style={{ color: U.sectionTitleOrange, borderBottomColor: U.accentOrange }}
+        >
           Accessibilité du document
         </h2>
         <p className="m-0 mt-2 text-[10pt] leading-snug">
@@ -178,15 +296,28 @@ export function EdfDigitPreview({ doc }: { doc: EdfDigitDocument }) {
           </span>{' '}
           — niveau retenu pour la diffusion (saisie onglet « Diffusion »).
         </p>
-        <div className="mt-3 space-y-2 border border-neutral-400 bg-[#fafafa] p-2 text-[9.5pt] leading-snug">
+        <div
+          className="mt-3 space-y-2 p-2 text-[9.5pt] leading-snug"
+          style={{
+            borderWidth: 1,
+            borderStyle: 'solid',
+            borderColor: U.border,
+            backgroundColor: U.headerGray,
+          }}
+        >
           {ALL_ACCESS_LEVELS.map((lvl) => {
             const current = doc.diffusion.accessibilityLevel === lvl
             return (
               <p
                 key={lvl}
-                className={`m-0 ${current ? 'rounded-sm bg-amber-100/90 px-1 py-0.5 font-medium' : ''}`}
+                className={`m-0 ${current ? 'rounded-sm px-1 py-0.5 font-medium' : ''}`}
+                style={
+                  current
+                    ? { backgroundColor: '#FFF4CC', outline: `1px solid ${U.edfBlue}` }
+                    : undefined
+                }
               >
-                <span className="font-semibold text-[#003d6b]">
+                <span className="font-semibold" style={{ color: U.sectionTitleOrange }}>
                   {ACCESSIBILITY_LEVEL_LABEL[lvl]}
                 </span>{' '}
                 {ACCESSIBILITY_DESCRIPTIONS[lvl]}
@@ -194,33 +325,63 @@ export function EdfDigitPreview({ doc }: { doc: EdfDigitDocument }) {
             )
           })}
         </div>
-        <h3 className="m-0 mt-4 text-[10pt] font-bold uppercase text-[#003d6b]">
+        <h3
+          className="m-0 mt-4 text-[10pt] font-bold uppercase"
+          style={{ color: U.sectionTitleOrange }}
+        >
           Liste de diffusion (à remplir en cas de diffusion restreinte)
         </h3>
-        <table className="mt-2 w-full border-collapse border border-neutral-500 text-[10pt]">
+        <table
+          className="mt-2 w-full border-collapse text-[10pt] [table-layout:fixed]"
+          style={{ ...bc, borderWidth: 1, borderStyle: 'solid' }}
+        >
+          <colgroup>
+            <col style={{ width: '50%' }} />
+            <col style={{ width: '50%' }} />
+          </colgroup>
           <thead>
-            <tr className="bg-[#e8e8e8]">
-              <th className="w-[50%] border border-neutral-400 px-2 py-1 text-left font-semibold">
+            <tr style={{ backgroundColor: U.headerGray, color: U.text }}>
+              <th
+                className="border px-2 py-1.5 text-left align-top text-[9.5pt] font-semibold"
+                style={{ ...bc }}
+              >
                 Destinataire(s) EDF (Nom/Prénom/Entité)
               </th>
-              <th className="border border-neutral-400 px-2 py-1 text-left font-semibold">
+              <th
+                className="border px-2 py-1.5 text-left align-top text-[9.5pt] font-semibold"
+                style={{ ...bc }}
+              >
                 Destinataire(s) externes EDF (Nom/Prénom/Société)
               </th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td className="border border-neutral-400 px-2 py-1 align-top whitespace-pre-wrap">
+              <td
+                className="border px-2 py-2 align-top whitespace-pre-wrap"
+                style={{ ...bc, backgroundColor: '#fff', verticalAlign: 'top' }}
+              >
                 {doc.diffusion.edfDistributionList || '—'}
               </td>
-              <td className="border border-neutral-400 px-2 py-1 align-top whitespace-pre-wrap">
+              <td
+                className="border px-2 py-2 align-top whitespace-pre-wrap"
+                style={{ ...bc, backgroundColor: '#fff', verticalAlign: 'top' }}
+              >
                 {doc.diffusion.externalDistributionList || '—'}
               </td>
             </tr>
           </tbody>
         </table>
-        <div className="mt-3 rounded-sm border border-amber-200/80 bg-amber-50/50 px-2 py-2 text-[9pt] leading-snug text-neutral-800">
-          <p className="m-0 font-semibold text-[#003d6b]">
+        <div
+          className="mt-3 px-2 py-2 text-[9pt] leading-snug text-neutral-900"
+          style={{
+            borderWidth: 1,
+            borderStyle: 'solid',
+            borderColor: U.edfBlue,
+            backgroundColor: '#F7FAFC',
+          }}
+        >
+          <p className="m-0 font-semibold" style={{ color: U.sectionTitleOrange }}>
             Rappel FID / DOCTEAM (modèle UNITEP)
           </p>
           <ul className="mb-0 mt-1 list-disc pl-4">
@@ -233,8 +394,17 @@ export function EdfDigitPreview({ doc }: { doc: EdfDigitDocument }) {
         </div>
       </section>
 
-      <nav className="unitop-toc border-b border-neutral-300 bg-[#fafafa] px-3 py-3">
-        <h2 className="m-0 text-[11px] font-bold uppercase text-[#003d6b]">
+      <nav
+        className="unitop-toc border-b border-solid px-3 py-3"
+        style={{
+          borderColor: U.border,
+          backgroundColor: U.headerGray,
+        }}
+      >
+        <h2
+          className="m-0 text-[11px] font-bold uppercase"
+          style={{ color: U.sectionTitleOrange }}
+        >
           Table des matières
         </h2>
         <ul className="m-0 mt-2 list-none p-0 text-[10pt]">
@@ -268,7 +438,7 @@ export function EdfDigitPreview({ doc }: { doc: EdfDigitDocument }) {
         </ul>
         <style>{`
           .unitop-toc .toc-row { display: flex; align-items: baseline; gap: 6px; width: 100%; }
-          .unitop-toc .toc-title { flex: 0 1 auto; max-width: 85%; }
+          .unitop-toc .toc-title { flex: 0 1 auto; max-width: 85%; color: ${U.sectionTitleOrange}; }
           .unitop-toc .toc-leader {
             flex: 1 1 auto;
             border-bottom: 1px dotted #b0b0b0;
@@ -284,15 +454,27 @@ export function EdfDigitPreview({ doc }: { doc: EdfDigitDocument }) {
         {doc.sections.map((s, i) => (
           <section key={s.id} className="mb-4">
             {s.level === 1 ? (
-              <h2 className="m-0 border-b border-neutral-300 pb-0.5 text-[13pt] font-bold text-[#003d6b]">
+              <h2
+                className="m-0 border-b border-solid pb-0.5 text-[13pt] font-bold"
+                style={{
+                  color: U.sectionTitleOrange,
+                  borderBottomColor: U.accentOrange,
+                }}
+              >
                 {formatSectionHeading(nums[i], s.title)}
               </h2>
             ) : s.level === 2 ? (
-              <h3 className="m-0 mt-3 text-[12pt] font-bold text-[#1a1a1a]">
+              <h3
+                className="m-0 mt-3 border-b border-solid border-transparent pb-0.5 text-[12pt] font-bold"
+                style={{ color: U.sectionTitleOrange }}
+              >
                 {formatSectionHeading(nums[i], s.title)}
               </h3>
             ) : (
-              <h4 className="m-0 mt-2 text-[11pt] font-bold text-[#333]">
+              <h4
+                className="m-0 mt-2 text-[11pt] font-bold"
+                style={{ color: U.sectionTitleOrange }}
+              >
                 {formatSectionHeading(nums[i], s.title)}
               </h4>
             )}
@@ -306,10 +488,16 @@ export function EdfDigitPreview({ doc }: { doc: EdfDigitDocument }) {
       </main>
 
       {doc.annexes.length > 0 ? (
-        <div className="border-t-2 border-neutral-400 px-3 py-3">
+        <div
+          className="border-t-2 border-solid px-3 py-3"
+          style={{ borderTopColor: U.edfBlue }}
+        >
           {doc.annexes.map((a, i) => (
             <section key={a.id} className="mb-6">
-              <h2 className="m-0 text-[12pt] font-bold text-[#003d6b]">
+              <h2
+                className="m-0 text-[12pt] font-bold"
+                style={{ color: U.sectionTitleOrange }}
+              >
                 Annexe {i + 1} : {a.title}
               </h2>
               <div className="mt-2 space-y-2">
@@ -321,6 +509,34 @@ export function EdfDigitPreview({ doc }: { doc: EdfDigitDocument }) {
           ))}
         </div>
       ) : null}
+
+      <footer
+        className="mt-2 border-t-2 border-solid px-3 py-2 text-[8.5pt] leading-snug"
+        style={{
+          borderColor: U.edfBlue,
+          backgroundColor: U.headerBandBg,
+        }}
+      >
+        <p
+          className="m-0 text-[10px] font-bold leading-tight"
+          style={{ color: U.edfBlue }}
+        >
+          Document DIGIT Accessibilité :
+        </p>
+        <p
+          className="m-0 mt-0.5 text-[10pt] font-semibold"
+          style={{ color: U.sectionTitleOrange }}
+        >
+          {h.title || '—'}
+        </p>
+        <p className="m-0 mt-1 text-neutral-800">
+          Page 1 / {h.pageCount?.trim() ? h.pageCount : '?'}
+          <span className="mx-1 text-neutral-500">·</span>
+          <span className="text-neutral-700">Référence :</span>{' '}
+          {h.reference || '—'}
+        </p>
+        <p className="m-0 mt-1 text-neutral-900">{UNITEP_COPYRIGHT}</p>
+      </footer>
     </article>
   )
 }
@@ -387,12 +603,20 @@ function BlockView({ block }: { block: SectionBlock }) {
 }
 
 function TableView({ t }: { t: BlockTable }) {
+  const bc = { borderColor: U.border }
   return (
-    <table className="w-full border-collapse border border-neutral-500 text-[10pt]">
+    <table
+      className="w-full border-collapse text-[10pt] [table-layout:fixed]"
+      style={{ ...bc, borderWidth: 1, borderStyle: 'solid' }}
+    >
       <thead>
-        <tr className="bg-neutral-200">
+        <tr style={{ backgroundColor: U.headerGray }}>
           {t.headers.map((h, j) => (
-            <th key={j} className="border border-neutral-400 px-1 py-0.5 text-left">
+            <th
+              key={j}
+              className="border px-1 py-1 text-left font-semibold"
+              style={{ ...bc, color: U.text }}
+            >
               {h}
             </th>
           ))}
@@ -402,7 +626,11 @@ function TableView({ t }: { t: BlockTable }) {
         {t.rows.map((r, i) => (
           <tr key={i}>
             {r.map((c, j) => (
-              <td key={j} className="border border-neutral-400 px-1 py-0.5 align-top">
+              <td
+                key={j}
+                className="border px-1 py-1 align-top"
+                style={{ ...bc, backgroundColor: '#fff' }}
+              >
                 {c}
               </td>
             ))}
@@ -420,21 +648,40 @@ function AiTable({
   rows: ActionIllustrationRow[]
   caption?: string
 }) {
+  const bc = { borderColor: U.border }
   return (
     <div>
       {caption ? (
-        <p className="m-0 mb-1 text-[10pt] font-semibold text-[#003d6b]">
+        <p
+          className="m-0 mb-1 text-[10pt] font-semibold"
+          style={{ color: U.sectionTitleOrange }}
+        >
           {caption}
         </p>
       ) : null}
-      <table className="w-full border-collapse border border-neutral-600 text-[10pt]">
+      <table
+        className="w-full border-collapse text-[10pt] [table-layout:fixed]"
+        style={{ ...bc, borderWidth: 1, borderStyle: 'solid' }}
+      >
+        <colgroup>
+          <col style={{ width: '8%' }} />
+          <col style={{ width: '47%' }} />
+          <col style={{ width: '45%' }} />
+        </colgroup>
         <thead>
-          <tr className="bg-[#003d6b] text-white">
-            <th className="w-8 border border-neutral-500 px-1 py-1">N°</th>
-            <th className="border border-neutral-500 px-1 py-1 text-left">
+          <tr
+            style={{ backgroundColor: U.sectionTitleOrange, color: U.onNavy }}
+          >
+            <th className="border px-1 py-1 text-center font-semibold" style={bc}>
+              N°
+            </th>
+            <th
+              className="border px-1 py-1 text-left font-semibold"
+              style={bc}
+            >
               ACTION A RÉALISER
             </th>
-            <th className="w-[38%] border border-neutral-500 px-1 py-1">
+            <th className="border px-1 py-1 text-left font-semibold" style={bc}>
               ILLUSTRATION
             </th>
           </tr>
@@ -442,26 +689,33 @@ function AiTable({
         <tbody>
           {rows.map((r, i) => (
             <tr key={r.id}>
-              <td className="border border-neutral-400 px-1 py-1 text-center align-top font-mono">
+              <td
+                className="border px-1 py-1 text-center align-top font-mono"
+                style={{ ...bc, backgroundColor: '#fff' }}
+              >
                 {i + 1}
               </td>
-              <td className="border border-neutral-400 px-1 py-1 align-top whitespace-pre-wrap">
+              <td
+                className="border px-1 py-1 align-top whitespace-pre-wrap"
+                style={{ ...bc, backgroundColor: '#fff' }}
+              >
                 {r.actionText}
                 {r.remark ? (
-                  <div className="mt-1 border-t border-dotted border-neutral-300 pt-1 text-[9pt] text-neutral-600">
+                  <div className="mt-1 border-t border-dotted border-neutral-400 pt-1 text-[9pt] text-neutral-700">
                     {r.remark}
                   </div>
                 ) : null}
               </td>
-              <td className="border border-neutral-400 p-1 align-top">
+              <td className="border p-1 align-top" style={{ ...bc, backgroundColor: '#fff' }}>
                 {r.imageDataUrl ? (
                   <img
                     src={r.imageDataUrl}
                     alt=""
-                    className="max-h-48 max-w-full border border-neutral-300"
+                    className="max-h-48 max-w-full border border-solid"
+                    style={{ borderColor: U.border }}
                   />
                 ) : (
-                  <span className="text-neutral-400">—</span>
+                  <span className="text-neutral-500">—</span>
                 )}
               </td>
             </tr>

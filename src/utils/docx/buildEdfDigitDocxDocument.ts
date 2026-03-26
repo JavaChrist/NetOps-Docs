@@ -1,4 +1,5 @@
 import {
+  AlignmentType,
   BorderStyle,
   Document,
   FileChild,
@@ -10,6 +11,8 @@ import {
   TableCell,
   TableRow,
   TextRun,
+  VerticalAlignTable,
+  VerticalMergeType,
   WidthType,
   convertInchesToTwip,
 } from 'docx'
@@ -46,10 +49,10 @@ import {
 import { PROCEDURE_DOCX_THEME as T } from './procedureDocxTheme'
 
 const B = {
-  top: { style: BorderStyle.SINGLE, size: 1, color: '999999' },
-  bottom: { style: BorderStyle.SINGLE, size: 1, color: '999999' },
-  left: { style: BorderStyle.SINGLE, size: 1, color: '999999' },
-  right: { style: BorderStyle.SINGLE, size: 1, color: '999999' },
+  top: { style: BorderStyle.SINGLE, size: 1, color: '000000' },
+  bottom: { style: BorderStyle.SINGLE, size: 1, color: '000000' },
+  left: { style: BorderStyle.SINGLE, size: 1, color: '000000' },
+  right: { style: BorderStyle.SINGLE, size: 1, color: '000000' },
 } as const
 
 function cellPara(text: string, bold = false): Paragraph {
@@ -80,13 +83,13 @@ function secondaryMetaTable(doc: EdfDigitDocument): Table {
   return new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
     borders: B,
-    columnWidths: [2800, 7200],
+    columnWidths: [3500, 6500],
     rows: rows.map(
       ([k, v]) =>
         new TableRow({
           children: [
             new TableCell({
-              shading: { fill: 'ECEAE7', type: ShadingType.CLEAR },
+              shading: { fill: 'E8E8E8', type: ShadingType.CLEAR },
               children: [cellPara(k, true)],
             }),
             new TableCell({
@@ -108,9 +111,40 @@ function secondaryMetaTable(doc: EdfDigitDocument): Table {
   })
 }
 
-function coverBlockDocx(h: DocumentHeaderBlock): Paragraph[] {
+const UNITEP_ORANGE_TITLE = 'C65911'
+const UNITEP_BAND = 'F2F2F2'
+
+const coverCell = {
+  shading: { fill: 'FFFFFF', type: ShadingType.CLEAR },
+  borders: B,
+} as const
+
+const NO = {
+  style: BorderStyle.NONE,
+  size: 0,
+  color: 'FFFFFF',
+} as const
+
+const borderlessTable = {
+  top: NO,
+  bottom: NO,
+  left: NO,
+  right: NO,
+  insideHorizontal: NO,
+  insideVertical: NO,
+} as const
+
+const cellBorderNone = {
+  top: NO,
+  bottom: NO,
+  left: NO,
+  right: NO,
+} as const
+
+function coverBlockDocx(h: DocumentHeaderBlock): FileChild[] {
   const small = T.halfPt.small
   const tiny = Math.round(T.halfPt.small * 0.85)
+  const bodySize = T.halfPt.body
   const p = (text: string, opt?: { bold?: boolean; color?: string; size?: number }) =>
     new Paragraph({
       spacing: { after: 60 },
@@ -125,23 +159,204 @@ function coverBlockDocx(h: DocumentHeaderBlock): Paragraph[] {
       ],
     })
   const page = h.pageCount?.trim() ? h.pageCount : '?'
-  const lines: Paragraph[] = [
-    p('Document DIGIT Accessibilité :', { bold: true, color: T.color.navy }),
+
+  const logoParagraph = new Paragraph({
+    alignment: AlignmentType.CENTER,
+    children: [
+      new TextRun({
+        text: '\u2B24 ',
+        font: T.fontBody,
+        size: 36,
+        color: 'F39200',
+      }),
+      new TextRun({
+        text: 'e',
+        font: T.fontBody,
+        bold: true,
+        size: Math.round(bodySize * 0.92),
+        color: '003978',
+      }),
+      new TextRun({
+        text: 'DF',
+        font: T.fontBody,
+        bold: true,
+        size: bodySize,
+        color: '003978',
+      }),
+    ],
+  })
+
+  const titleChildren: Paragraph[] = [
     new Paragraph({
-      spacing: { after: 80 },
+      alignment: AlignmentType.CENTER,
+      spacing: { after: !h.isDigitDocument ? 40 : 80 },
       children: [
         new TextRun({
           text: h.title || '—',
-          font: T.fontBody,
-          size: T.halfPt.body,
           bold: true,
+          color: '000000',
+          font: T.fontBody,
+          size: bodySize,
         }),
       ],
     }),
-    p(`Indice : ${h.indice || '—'}`),
-    p(`Nb Pages : ${h.pageCount || '—'}`),
-    p(`Nb Annexe(s) : ${h.annexCount || '—'}`),
-    p(`Référence : ${h.reference || '—'}`),
+  ]
+  if (!h.isDigitDocument) {
+    titleChildren.push(
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [
+          new TextRun({
+            text: 'Document non marqué DIGIT dans l’en-tête éditable.',
+            font: T.fontBody,
+            size: tiny,
+            color: '666666',
+            italics: true,
+          }),
+        ],
+      }),
+    )
+  }
+
+  const metaLines = [
+    `Indice : ${h.indice || '—'}`,
+    `Nb Pages : ${h.pageCount || '—'}`,
+    `Nb Annexe(s) : ${h.annexCount || '—'}`,
+  ]
+  const metaParas = metaLines.map(
+    (line, i) =>
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { after: i < metaLines.length - 1 ? 40 : 0 },
+        children: [
+          new TextRun({
+            text: line,
+            font: T.fontBody,
+            size: small,
+            color: '000000',
+          }),
+        ],
+      }),
+  )
+
+  const rowLabels = new TableRow({
+    children: [
+      new TableCell({
+        shading: { fill: 'FFFFFF', type: ShadingType.CLEAR },
+        borders: cellBorderNone,
+        width: { size: 22, type: WidthType.PERCENTAGE },
+        children: [
+          new Paragraph({
+            spacing: { after: 40 },
+            children: [
+              new TextRun({
+                text: 'Document DIGIT',
+                font: T.fontBody,
+                size: small,
+                color: '000000',
+              }),
+            ],
+          }),
+        ],
+      }),
+      new TableCell({
+        shading: { fill: 'FFFFFF', type: ShadingType.CLEAR },
+        borders: cellBorderNone,
+        width: { size: 56, type: WidthType.PERCENTAGE },
+        children: [
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 40 },
+            children: [
+              new TextRun({
+                text: 'Accessibilité :',
+                font: T.fontBody,
+                size: small,
+                color: '000000',
+              }),
+            ],
+          }),
+        ],
+      }),
+      new TableCell({
+        shading: { fill: 'FFFFFF', type: ShadingType.CLEAR },
+        borders: cellBorderNone,
+        width: { size: 22, type: WidthType.PERCENTAGE },
+        children: [new Paragraph({ spacing: { after: 40 } })],
+      }),
+    ],
+  })
+
+  const labelStrip = new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    borders: borderlessTable,
+    rows: [rowLabels],
+  })
+
+  const rowTop = new TableRow({
+    children: [
+      new TableCell({
+        ...coverCell,
+        verticalAlign: VerticalAlignTable.CENTER,
+        verticalMerge: VerticalMergeType.RESTART,
+        width: { size: 22, type: WidthType.PERCENTAGE },
+        children: [logoParagraph],
+      }),
+      new TableCell({
+        ...coverCell,
+        verticalAlign: VerticalAlignTable.CENTER,
+        width: { size: 56, type: WidthType.PERCENTAGE },
+        children: titleChildren,
+      }),
+      new TableCell({
+        ...coverCell,
+        verticalAlign: VerticalAlignTable.CENTER,
+        verticalMerge: VerticalMergeType.RESTART,
+        width: { size: 22, type: WidthType.PERCENTAGE },
+        children: metaParas,
+      }),
+    ],
+  })
+
+  const rowRef = new TableRow({
+    children: [
+      new TableCell({
+        ...coverCell,
+        verticalMerge: VerticalMergeType.CONTINUE,
+        children: [new Paragraph({})],
+      }),
+      new TableCell({
+        ...coverCell,
+        verticalAlign: VerticalAlignTable.CENTER,
+        children: [
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [
+              new TextRun({
+                text: `Référence : ${h.reference || '—'}`,
+                font: T.fontBody,
+                size: tiny,
+                color: '000000',
+              }),
+            ],
+          }),
+        ],
+      }),
+      new TableCell({
+        ...coverCell,
+        verticalMerge: VerticalMergeType.CONTINUE,
+        children: [new Paragraph({})],
+      }),
+    ],
+  })
+
+  const coverGrid = new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    borders: B,
+    rows: [rowTop, rowRef],
+  })
+
+  const afterBand: FileChild[] = [
     p(UNITEP_DTEO_ADDRESS, { bold: true, color: '000000' }),
     p(`Page 1 / ${page}`, { color: '444444' }),
     p(UNITEP_COPYRIGHT, { size: tiny, color: '222222' }),
@@ -149,17 +364,8 @@ function coverBlockDocx(h: DocumentHeaderBlock): Paragraph[] {
     p(UNITEP_DIRECTION_LINE, { size: tiny, bold: true, color: '000000' }),
     p(UNITEP_METIERS, { bold: true, size: T.halfPt.body }),
   ]
-  if (!h.isDigitDocument) {
-    lines.splice(
-      2,
-      0,
-      p('Document non marqué DIGIT dans l’en-tête éditable.', {
-        size: tiny,
-        color: '666666',
-      }),
-    )
-  }
-  return lines
+
+  return [labelStrip, coverGrid, ...afterBand]
 }
 
 function revisionTable(doc: EdfDigitDocument): Table {
@@ -174,7 +380,7 @@ function revisionTable(doc: EdfDigitDocument): Table {
     ].map(
       (t) =>
         new TableCell({
-          shading: { fill: '003D6B', type: ShadingType.CLEAR },
+          shading: { fill: UNITEP_ORANGE_TITLE, type: ShadingType.CLEAR },
           children: [
             new Paragraph({
               children: [
@@ -307,7 +513,7 @@ async function blocksToDocx(blocks: SectionBlock[]): Promise<FileChild[]> {
           children: ['N°', 'ACTION A RÉALISER', 'ILLUSTRATION'].map(
             (t, i) =>
               new TableCell({
-                shading: { fill: '003D6B', type: ShadingType.CLEAR },
+                shading: { fill: UNITEP_ORANGE_TITLE, type: ShadingType.CLEAR },
                 children: [
                   new Paragraph({
                     children: [
@@ -430,7 +636,7 @@ export async function buildEdfDigitDocxDocument(
         new TextRun({
           text: 'Historique des indices',
           bold: true,
-          color: T.color.navy,
+          color: UNITEP_ORANGE_TITLE,
           size: T.halfPt.sectionTitle,
         }),
       ],
@@ -459,7 +665,7 @@ export async function buildEdfDigitDocxDocument(
         new TextRun({
           text: 'Accessibilité du document',
           bold: true,
-          color: T.color.navy,
+          color: UNITEP_ORANGE_TITLE,
           size: T.halfPt.sectionTitle,
         }),
       ],
@@ -489,7 +695,7 @@ export async function buildEdfDigitDocxDocument(
           new TextRun({
             text: `${ACCESSIBILITY_LEVEL_LABEL[lvl]} `,
             bold: true,
-            color: T.color.navy,
+            color: UNITEP_ORANGE_TITLE,
             font: T.fontBody,
             size: T.halfPt.small,
           }),
@@ -509,7 +715,7 @@ export async function buildEdfDigitDocxDocument(
         new TextRun({
           text: 'Liste de diffusion (à remplir en cas de diffusion restreinte)',
           bold: true,
-          color: T.color.navy,
+          color: UNITEP_ORANGE_TITLE,
           font: T.fontBody,
           size: T.halfPt.small,
         }),
@@ -568,7 +774,7 @@ export async function buildEdfDigitDocxDocument(
         new TextRun({
           text: 'Rappel FID / DOCTEAM (modèle UNITEP)',
           bold: true,
-          color: T.color.navy,
+          color: UNITEP_ORANGE_TITLE,
           font: T.fontBody,
           size: T.halfPt.small,
         }),
@@ -599,7 +805,7 @@ export async function buildEdfDigitDocxDocument(
         new TextRun({
           text: 'Table des matières',
           bold: true,
-          color: T.color.navy,
+          color: UNITEP_ORANGE_TITLE,
           size: T.halfPt.sectionTitle,
         }),
       ],
@@ -613,6 +819,7 @@ export async function buildEdfDigitDocxDocument(
             text: formatSectionHeading(nums[i], s.title),
             font: T.fontBody,
             size: T.halfPt.small,
+            color: UNITEP_ORANGE_TITLE,
           }),
         ],
       }),
@@ -626,6 +833,7 @@ export async function buildEdfDigitDocxDocument(
             text: `Annexe ${i + 1} : ${a.title}`,
             font: T.fontBody,
             size: T.halfPt.small,
+            color: UNITEP_ORANGE_TITLE,
           }),
         ],
       }),
@@ -648,7 +856,7 @@ export async function buildEdfDigitDocxDocument(
           new TextRun({
             text: formatSectionHeading(nums[i], s.title),
             bold: true,
-            color: T.color.navy,
+            color: UNITEP_ORANGE_TITLE,
             size: T.halfPt.stepTitle,
           }),
         ],
@@ -666,7 +874,7 @@ export async function buildEdfDigitDocxDocument(
           new TextRun({
             text: 'Annexes',
             bold: true,
-            color: T.color.navy,
+            color: UNITEP_ORANGE_TITLE,
             size: T.halfPt.sectionTitle,
           }),
         ],
@@ -682,6 +890,7 @@ export async function buildEdfDigitDocxDocument(
             new TextRun({
               text: `Annexe ${i + 1} : ${a.title}`,
               bold: true,
+              color: UNITEP_ORANGE_TITLE,
               size: T.halfPt.body,
             }),
           ],
@@ -690,6 +899,58 @@ export async function buildEdfDigitDocxDocument(
       children.push(...(await blocksToDocx(a.blocks)))
     }
   }
+
+  const hf = doc.header
+  const pg = hf.pageCount?.trim() ? hf.pageCount : '?'
+  children.push(
+    new Paragraph({
+      spacing: { before: 360, after: 80 },
+      shading: { fill: UNITEP_BAND, type: ShadingType.CLEAR },
+      children: [
+        new TextRun({
+          text: 'Document DIGIT Accessibilité :',
+          bold: true,
+          color: '00539F',
+          font: T.fontBody,
+          size: T.halfPt.small,
+        }),
+      ],
+    }),
+    new Paragraph({
+      shading: { fill: UNITEP_BAND, type: ShadingType.CLEAR },
+      children: [
+        new TextRun({
+          text: hf.title || '—',
+          bold: true,
+          color: UNITEP_ORANGE_TITLE,
+          font: T.fontBody,
+          size: T.halfPt.body,
+        }),
+      ],
+    }),
+    new Paragraph({
+      shading: { fill: UNITEP_BAND, type: ShadingType.CLEAR },
+      children: [
+        new TextRun({
+          text: `Page 1 / ${pg} · Référence : ${hf.reference || '—'}`,
+          font: T.fontBody,
+          size: T.halfPt.small,
+          color: '333333',
+        }),
+      ],
+    }),
+    new Paragraph({
+      shading: { fill: UNITEP_BAND, type: ShadingType.CLEAR },
+      children: [
+        new TextRun({
+          text: UNITEP_COPYRIGHT,
+          font: T.fontBody,
+          size: Math.round(T.halfPt.small * 0.85),
+          color: '222222',
+        }),
+      ],
+    }),
+  )
 
   return new Document({
     title: doc.header.title || 'Document DIGIT',
