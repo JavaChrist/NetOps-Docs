@@ -1,0 +1,36 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* Fond application : gris neutre froid, peu contrasté */
+  --color-edf-bg: #e4e2df;
+  --color-edf-surface: #fbfbf9;
+  --color-edf-panel: #eceae7;
+  --color-edf-border: #c9c6c1;
+  --color-edf-border-strong: #9c9893;
+  --color-edf-text: #2c2926;
+  --color-edf-muted: #5c5854;
+  --color-edf-heading: #1c1b19;
+  /* Accent réservé aux repères (pas gros CTA « marketing ») */
+  --color-edf-accent: #c4540a;
+  --color-edf-accent-dim: #9a4208;
+  --color-edf-navy: #003d6b;
+  --color-edf-vigilance-bg: #f3eee6;
+  --color-edf-vigilance-border: #c4540a;
+  --color-edf-focus: #003d6b;
+}
+
+html {
+  @apply antialiased;
+  font-size: 14px;
+}
+
+body {
+  @apply m-0 min-h-dvh bg-edf-bg text-edf-text;
+  font-family: var(--font-sans);
+  line-height: 1.45;
+}
+
+#root {
+  @apply min-h-dvh;
+}
