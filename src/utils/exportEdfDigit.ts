@@ -16,12 +16,12 @@ import {
   UNITEP_DIRECTION_LINE,
   UNITEP_DTEO_ADDRESS,
   UNITEP_EDF_SA_LEGAL,
-  UNITEP_EDF_HEADER_LOCKUP_SVG,
   UNITEP_FID_INSTRUCTIONS,
   UNITEP_METIERS,
   UNITEP_REVISION_NOTE,
 } from './unitEepTemplateCopy'
 import { UNITEP_THEME as U } from './unitEepTheme'
+import { EDF_LOGO_PNG_DATA_URL } from './edfLogoAsset'
 
 const ALL_ACCESS_LEVELS: AccessibilityLevel[] = [
   'LIBRE',
@@ -131,7 +131,6 @@ function tocHtml(
 }
 
 function coverBlockHtml(h: DocumentHeaderBlock): string {
-  const pg = h.pageCount?.trim() ? esc(h.pageCount) : '?'
   const nonDigit = h.isDigitDocument
     ? ''
     : '<p class="cover-note">Document non marqué DIGIT dans l’en-tête éditable.</p>'
@@ -146,7 +145,7 @@ function coverBlockHtml(h: DocumentHeaderBlock): string {
 <colgroup><col style="width:22%"/><col style="width:56%"/><col style="width:22%"/></colgroup>
 <tbody>
 <tr>
-<td class="cover-logo-cell" rowspan="2">${UNITEP_EDF_HEADER_LOCKUP_SVG}</td>
+<td class="cover-logo-cell" rowspan="2"><img src="${EDF_LOGO_PNG_DATA_URL}" alt="EDF" class="cover-logo-img"/></td>
 <td class="cover-title-cell"><p class="cover-title">${esc(h.title || '—')}</p>${nonDigit}</td>
 <td class="cover-meta-cell" rowspan="2"><div class="cover-meta-stack"><div>Indice : <strong>${esc(h.indice || '—')}</strong></div><div>Nb Pages : ${esc(h.pageCount || '—')}</div><div>Nb Annexe(s) : ${esc(h.annexCount || '—')}</div></div></td>
 </tr>
@@ -155,39 +154,36 @@ function coverBlockHtml(h: DocumentHeaderBlock): string {
 </tr>
 </tbody>
 </table>
-<p class="cover-addr">${esc(UNITEP_DTEO_ADDRESS)}</p>
-<p class="cover-page">Page 1 / ${pg}</p>
-</div>
-<div class="cover-legal-block">
-<p class="cover-small">${esc(UNITEP_COPYRIGHT)}</p>
-<p class="cover-small">${esc(UNITEP_EDF_SA_LEGAL)}</p>
-<p class="cover-dir">${esc(UNITEP_DIRECTION_LINE)}</p>
-<p class="cover-metiers">${esc(UNITEP_METIERS)}</p>
+<p class="cover-direction"><strong>${esc(UNITEP_DIRECTION_LINE)}</strong> <strong>${esc(UNITEP_METIERS)}</strong> <span class="cover-entity">Entité émettrice : ${esc(h.issuingEntity || '—')}</span></p>
 </div>
 </header>`
 }
 
-function footerBlockHtml(h: DocumentHeaderBlock): string {
+function coverFooterHtml(h: DocumentHeaderBlock): string {
   const pg = h.pageCount?.trim() ? esc(h.pageCount) : '?'
-  return `<footer class="doc-footer">
-<p class="footer-digit-label">Document DIGIT Accessibilité :</p>
-<p class="footer-doc-title">${esc(h.title || '—')}</p>
-<p class="footer-meta">Page 1 / ${pg} <span class="footer-sep">·</span> <span class="muted">Référence :</span> ${esc(h.reference || '—')}</p>
-<p class="footer-copy">${esc(UNITEP_COPYRIGHT)}</p>
-</footer>`
+  return `<section class="cover-footer">
+<div class="cover-footer-row"><img src="${EDF_LOGO_PNG_DATA_URL}" alt="EDF" class="cover-footer-logo"/><p class="cover-footer-addr">${esc(UNITEP_DTEO_ADDRESS)}</p></div>
+<p class="cover-footer-page">Page 1 / ${pg}</p>
+<p class="cover-footer-small">${esc(UNITEP_COPYRIGHT)}</p>
+<p class="cover-footer-small">${esc(UNITEP_EDF_SA_LEGAL)}</p>
+</section>`
 }
 
 function secondaryMetaTable(h: DocumentHeaderBlock): string {
   const rows: [string, string][] = [
-    ['Entité émettrice', h.issuingEntity],
     ['Résumé', h.summary],
     ['Documents associés', h.relatedDocuments],
-    ['Type de document', h.documentType],
+  ]
+  const inline: [string, string][] = [
+    ['Type', h.documentType],
     ['Processus', h.process],
     ["Périmètre d'application", h.applicationScope],
     ["Date d'applicabilité", h.applicabilityDate],
   ]
-  return `<table class="doc-header"><colgroup><col style="width:35%"/><col style="width:65%"/></colgroup><tbody>${rows.map(([k, v]) => headerField(k, v)).join('')}</tbody></table>`
+  const inlineHtml = inline
+    .map(([k, v]) => `<p class="cover-inline-field">${esc(k)} : ${esc(v || '—')}</p>`)
+    .join('')
+  return `<table class="doc-header"><colgroup><col style="width:22%"/><col style="width:78%"/></colgroup><tbody>${rows.map(([k, v]) => headerField(k, v)).join('')}</tbody></table><div class="doc-header-inline">${inlineHtml}</div>`
 }
 
 function accessibilitySectionHtml(doc: EdfDigitDocument): string {
@@ -268,7 +264,7 @@ export function buildEdfDigitHtmlDocument(doc: EdfDigitDocument): string {
     )
     .join('')
 
-  const footer = footerBlockHtml(h)
+  const coverFooter = coverFooterHtml(h)
 
   const styles = `
 :root{--u-edf:${U.edfBlue};--u-title:${U.sectionTitleOrange};--u-accent:${U.accentOrange};--u-band:${U.headerBandBg};--u-head:${U.headerGray};--u-bdr:${U.border};--u-txt:${U.text};}
@@ -281,7 +277,7 @@ body{font-family:'Segoe UI',Calibri,Arial,sans-serif;font-size:11pt;color:var(--
 table.cover-grid{width:100%;border-collapse:collapse;table-layout:fixed;border:1px solid #000;background:#fff;}
 .cover-logo-cell,.cover-title-cell,.cover-meta-cell,.cover-ref-cell{border:1px solid #000;padding:8px;vertical-align:middle;background:#fff;}
 .cover-logo-cell{text-align:center;}
-.cover-logo-cell svg{display:block;margin:0 auto;}
+.cover-logo-img{display:block;margin:0 auto;width:96px;height:auto;}
 .cover-title-cell{text-align:center;}
 .cover-title{margin:0;font-size:11pt;font-weight:700;color:#000;}
 .cover-note{margin:4px 0 0;font-size:9pt;color:#555;}
@@ -290,22 +286,20 @@ table.cover-grid{width:100%;border-collapse:collapse;table-layout:fixed;border:1
 .cover-meta-stack div{margin:0 0 2px;}
 .cover-ref-cell{text-align:center;}
 .cover-ref{margin:0;font-size:8.5pt;line-height:1.35;color:#000;}
-.cover-addr{margin:8px 0 0;font-weight:600;}
-.cover-page{margin:4px 0 0;color:#333;font-size:9.5pt;}
-.cover-legal-block{padding:10px 12px 8px;background:#fff;}
-.cover-small{margin:6px 0 0;font-size:8.5pt;line-height:1.3;color:#222;}
-.cover-dir{margin:8px 0 0;font-size:8.5pt;font-weight:bold;text-transform:uppercase;}
-.cover-metiers{margin:4px 0 0;font-size:11pt;font-weight:bold;}
-.doc-footer{margin-top:16px;border-top:2px solid var(--u-edf);background:var(--u-band);padding:10px 12px;font-size:8.5pt;line-height:1.35;}
-.footer-digit-label{margin:0;color:var(--u-edf);font-weight:bold;font-size:10px;}
-.footer-doc-title{margin:4px 0 0;font-size:10pt;font-weight:600;color:var(--u-title);}
-.footer-meta{margin:6px 0 0;color:#333;}
-.footer-sep{margin:0 6px;color:#999;}
-.footer-copy{margin:6px 0 0;color:#222;}
-table.doc-header{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:16px;font-size:10pt;}
-table.doc-header th,table.doc-header td{border:1px solid var(--u-bdr);padding:6px 8px;vertical-align:top;}
-table.doc-header th{background:var(--u-head);text-align:left;font-weight:600;color:var(--u-txt);}
+.cover-direction{margin:10px 0 0;font-size:9.5pt;line-height:1.35;color:#000;text-transform:uppercase;font-weight:600;}
+.cover-direction .cover-entity{font-weight:400;text-transform:none;margin-left:4px;}
+.cover-footer{border-top:1px solid var(--u-bdr);margin-top:12px;padding:10px 12px;font-size:8.5pt;line-height:1.35;background:#fff;}
+.cover-footer-row{display:flex;align-items:center;gap:10px;}
+.cover-footer-logo{width:64px;height:auto;display:block;}
+.cover-footer-addr{margin:0;font-weight:600;font-size:10pt;}
+.cover-footer-page{margin:6px 0 0;color:#333;font-size:9.5pt;}
+.cover-footer-small{margin:6px 0 0;font-size:8.5pt;color:#222;}
+table.doc-header{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:6px;font-size:10pt;}
+table.doc-header th,table.doc-header td{border:1px solid #000;padding:6px 8px;vertical-align:top;}
+table.doc-header th{background:#fff;text-align:left;font-weight:400;color:#000;}
 table.doc-header td{background:#fff;}
+.doc-header-inline{padding:4px 0 16px;font-size:10pt;line-height:1.35;color:#000;}
+.doc-header-inline .cover-inline-field{margin:0 0 2px;}
 .hist h2{font-size:11px;text-transform:uppercase;color:var(--u-title);border-bottom:2px solid var(--u-accent);padding-bottom:4px;}
 .hist-note{font-size:9pt;font-style:italic;color:#444;margin:8px 0;}
 table.rev,table.norm,table.action-ill,table.diffusion-2col{width:100%;border-collapse:collapse;table-layout:fixed;margin:8px 0 16px;font-size:10pt;}
@@ -368,9 +362,9 @@ ${cover}
 ${headerTable}
 ${rev}
 ${diff}
+${coverFooter}
 ${toc}
 <main class="body">${body}</main>
 ${ann.length ? `<div class="annexes-wrap">${ann}</div>` : ''}
-${footer}
 </body></html>`
 }

@@ -3,8 +3,12 @@ import {
   BorderStyle,
   Document,
   FileChild,
+  Footer,
+  Header,
   HeadingLevel,
+  HeightRule,
   ImageRun,
+  PageNumber,
   Paragraph,
   ShadingType,
   Table,
@@ -47,6 +51,11 @@ import {
   scaleToMaxWidth,
 } from './dataUrlImage'
 import { PROCEDURE_DOCX_THEME as T } from './procedureDocxTheme'
+import {
+  EDF_LOGO_PNG_DATA_URL,
+  EDF_LOGO_PNG_HEIGHT,
+  EDF_LOGO_PNG_WIDTH,
+} from '../edfLogoAsset'
 
 const B = {
   top: { style: BorderStyle.SINGLE, size: 1, color: '000000' },
@@ -72,25 +81,20 @@ function cellPara(text: string, bold = false): Paragraph {
 function secondaryMetaTable(doc: EdfDigitDocument): Table {
   const h = doc.header
   const rows: [string, string][] = [
-    ['Entité émettrice', h.issuingEntity],
     ['Résumé', h.summary],
     ['Documents associés', h.relatedDocuments],
-    ['Type de document', h.documentType],
-    ['Processus', h.process],
-    ["Périmètre d'application", h.applicationScope],
-    ["Date d'applicabilité", h.applicabilityDate],
   ]
   return new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
     borders: B,
-    columnWidths: [3500, 6500],
+    columnWidths: [2200, 7800],
     rows: rows.map(
       ([k, v]) =>
         new TableRow({
           children: [
             new TableCell({
-              shading: { fill: 'E8E8E8', type: ShadingType.CLEAR },
-              children: [cellPara(k, true)],
+              shading: { fill: 'FFFFFF', type: ShadingType.CLEAR },
+              children: [cellPara(k, false)],
             }),
             new TableCell({
               children: [
@@ -111,8 +115,30 @@ function secondaryMetaTable(doc: EdfDigitDocument): Table {
   })
 }
 
+function inlineFieldParagraphs(h: DocumentHeaderBlock): Paragraph[] {
+  const fields: [string, string][] = [
+    ['Type', h.documentType],
+    ['Processus', h.process],
+    ["Périmètre d'application", h.applicationScope],
+    ["Date d'applicabilité", h.applicabilityDate],
+  ]
+  return fields.map(
+    ([k, v]) =>
+      new Paragraph({
+        spacing: { after: 40 },
+        children: [
+          new TextRun({
+            text: `${k} : ${v || '—'}`,
+            font: T.fontBody,
+            size: T.halfPt.small,
+            color: '000000',
+          }),
+        ],
+      }),
+  )
+}
+
 const UNITEP_ORANGE_TITLE = 'C65911'
-const UNITEP_BAND = 'F2F2F2'
 
 const coverCell = {
   shading: { fill: 'FFFFFF', type: ShadingType.CLEAR },
@@ -141,50 +167,42 @@ const cellBorderNone = {
   right: NO,
 } as const
 
-function coverBlockDocx(h: DocumentHeaderBlock): FileChild[] {
+function coverBlockDocx(h: DocumentHeaderBlock): (Paragraph | Table)[] {
   const small = T.halfPt.small
   const tiny = Math.round(T.halfPt.small * 0.85)
   const bodySize = T.halfPt.body
-  const p = (text: string, opt?: { bold?: boolean; color?: string; size?: number }) =>
-    new Paragraph({
-      spacing: { after: 60 },
-      children: [
-        new TextRun({
-          text,
-          font: T.fontBody,
-          size: opt?.size ?? small,
-          bold: opt?.bold,
-          color: opt?.color ?? T.color.heading,
-        }),
-      ],
-    })
-  const page = h.pageCount?.trim() ? h.pageCount : '?'
 
-  const logoParagraph = new Paragraph({
-    alignment: AlignmentType.CENTER,
-    children: [
-      new TextRun({
-        text: '\u2B24 ',
-        font: T.fontBody,
-        size: 36,
-        color: 'F39200',
-      }),
-      new TextRun({
-        text: 'e',
-        font: T.fontBody,
-        bold: true,
-        size: Math.round(bodySize * 0.92),
-        color: '003978',
-      }),
-      new TextRun({
-        text: 'DF',
-        font: T.fontBody,
-        bold: true,
-        size: bodySize,
-        color: '003978',
-      }),
-    ],
-  })
+  const logoDecoded = decodeDataUrlImage(EDF_LOGO_PNG_DATA_URL)
+  const logoDisplayWidth = 96
+  const logoDisplayHeight = Math.round(
+    (EDF_LOGO_PNG_HEIGHT / EDF_LOGO_PNG_WIDTH) * logoDisplayWidth,
+  )
+  const logoParagraph = logoDecoded
+    ? new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [
+          new ImageRun({
+            type: logoDecoded.type,
+            data: logoDecoded.data,
+            transformation: {
+              width: logoDisplayWidth,
+              height: logoDisplayHeight,
+            },
+          }),
+        ],
+      })
+    : new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [
+          new TextRun({
+            text: 'edf',
+            font: T.fontBody,
+            bold: true,
+            size: bodySize,
+            color: '003978',
+          }),
+        ],
+      })
 
   const titleChildren: Paragraph[] = [
     new Paragraph({
@@ -294,6 +312,7 @@ function coverBlockDocx(h: DocumentHeaderBlock): FileChild[] {
   })
 
   const rowTop = new TableRow({
+    height: { value: 1100, rule: HeightRule.ATLEAST },
     children: [
       new TableCell({
         ...coverCell,
@@ -319,6 +338,7 @@ function coverBlockDocx(h: DocumentHeaderBlock): FileChild[] {
   })
 
   const rowRef = new TableRow({
+    height: { value: 420, rule: HeightRule.ATLEAST },
     children: [
       new TableCell({
         ...coverCell,
@@ -356,16 +376,221 @@ function coverBlockDocx(h: DocumentHeaderBlock): FileChild[] {
     rows: [rowTop, rowRef],
   })
 
-  const afterBand: FileChild[] = [
-    p(UNITEP_DTEO_ADDRESS, { bold: true, color: '000000' }),
-    p(`Page 1 / ${page}`, { color: '444444' }),
-    p(UNITEP_COPYRIGHT, { size: tiny, color: '222222' }),
-    p(UNITEP_EDF_SA_LEGAL, { size: tiny, color: '222222' }),
-    p(UNITEP_DIRECTION_LINE, { size: tiny, bold: true, color: '000000' }),
-    p(UNITEP_METIERS, { bold: true, size: T.halfPt.body }),
-  ]
+  const directionParagraph = new Paragraph({
+    spacing: { before: 160, after: 120 },
+    children: [
+      new TextRun({
+        text: `${UNITEP_DIRECTION_LINE} ${UNITEP_METIERS} `,
+        font: T.fontBody,
+        size: small,
+        bold: true,
+        color: '000000',
+        allCaps: true,
+      }),
+      new TextRun({
+        text: `Entité émettrice : ${h.issuingEntity || '—'}`,
+        font: T.fontBody,
+        size: small,
+        color: '000000',
+      }),
+    ],
+  })
 
-  return [labelStrip, coverGrid, ...afterBand]
+  return [labelStrip, coverGrid, directionParagraph]
+}
+
+function coverFooterDocx(h: DocumentHeaderBlock): (Paragraph | Table)[] {
+  const small = T.halfPt.small
+  const tiny = Math.round(T.halfPt.small * 0.85)
+  const page = h.pageCount?.trim() ? h.pageCount : '?'
+  const logoDecoded = decodeDataUrlImage(EDF_LOGO_PNG_DATA_URL)
+  const logoDisplayWidth = 64
+  const logoDisplayHeight = Math.round(
+    (EDF_LOGO_PNG_HEIGHT / EDF_LOGO_PNG_WIDTH) * logoDisplayWidth,
+  )
+
+  const logoRow = new TableRow({
+    children: [
+      new TableCell({
+        borders: cellBorderNone,
+        width: { size: 15, type: WidthType.PERCENTAGE },
+        verticalAlign: VerticalAlignTable.CENTER,
+        children: logoDecoded
+          ? [
+              new Paragraph({
+                children: [
+                  new ImageRun({
+                    type: logoDecoded.type,
+                    data: logoDecoded.data,
+                    transformation: {
+                      width: logoDisplayWidth,
+                      height: logoDisplayHeight,
+                    }
+                  }),
+                ],
+              }),
+            ]
+          : [new Paragraph({})],
+      }),
+      new TableCell({
+        borders: cellBorderNone,
+        width: { size: 85, type: WidthType.PERCENTAGE },
+        verticalAlign: VerticalAlignTable.CENTER,
+        children: [
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: UNITEP_DTEO_ADDRESS,
+                font: T.fontBody,
+                size: small,
+                bold: true,
+                color: '000000',
+              }),
+            ],
+          }),
+        ],
+      }),
+    ],
+  })
+
+  const footerTable = new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    borders: borderlessTable,
+    rows: [logoRow],
+  })
+
+  return [
+    footerTable,
+    new Paragraph({
+      spacing: { before: 80, after: 40 },
+      children: [
+        new TextRun({
+          text: `Page 1 / ${page}`,
+          font: T.fontBody,
+          size: small,
+          color: '444444',
+        }),
+      ],
+    }),
+    new Paragraph({
+      spacing: { after: 40 },
+      children: [
+        new TextRun({
+          text: UNITEP_COPYRIGHT,
+          font: T.fontBody,
+          size: tiny,
+          color: '222222',
+        }),
+      ],
+    }),
+    new Paragraph({
+      spacing: { after: 160 },
+      children: [
+        new TextRun({
+          text: UNITEP_EDF_SA_LEGAL,
+          font: T.fontBody,
+          size: tiny,
+          color: '222222',
+        }),
+      ],
+    }),
+  ]
+}
+
+function defaultHeaderDocx(h: DocumentHeaderBlock): (Paragraph | Table)[] {
+  const small = T.halfPt.small
+  const tiny = Math.round(T.halfPt.small * 0.85)
+  return [
+    new Paragraph({
+      spacing: { after: 40 },
+      children: [
+        new TextRun({
+          text: 'Document DIGIT  Accessibilité : ',
+          bold: true,
+          color: '00539F',
+          font: T.fontBody,
+          size: tiny,
+        }),
+        new TextRun({
+          text: h.title || '—',
+          bold: true,
+          color: '000000',
+          font: T.fontBody,
+          size: small,
+        }),
+      ],
+      border: {
+        bottom: {
+          style: BorderStyle.SINGLE,
+          size: 6,
+          color: '000000',
+          space: 2,
+        },
+      },
+    }),
+  ]
+}
+
+function defaultFooterDocx(h: DocumentHeaderBlock): (Paragraph | Table)[] {
+  const tiny = Math.round(T.halfPt.small * 0.85)
+  const totalPages = h.pageCount?.trim() ? h.pageCount : ''
+  return [
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 40, after: 40 },
+      border: {
+        top: {
+          style: BorderStyle.SINGLE,
+          size: 4,
+          color: '000000',
+          space: 2,
+        },
+      },
+      children: [
+        new TextRun({
+          text: 'Page ',
+          font: T.fontBody,
+          size: tiny,
+          color: '333333',
+        }),
+        new TextRun({
+          children: [PageNumber.CURRENT],
+          font: T.fontBody,
+          size: tiny,
+          color: '333333',
+        }),
+        new TextRun({
+          text: ' / ',
+          font: T.fontBody,
+          size: tiny,
+          color: '333333',
+        }),
+        ...(totalPages
+          ? [
+              new TextRun({
+                text: totalPages,
+                font: T.fontBody,
+                size: tiny,
+                color: '333333',
+              }),
+            ]
+          : [
+              new TextRun({
+                children: [PageNumber.TOTAL_PAGES],
+                font: T.fontBody,
+                size: tiny,
+                color: '333333',
+              }),
+            ]),
+        new TextRun({
+          text: `    Référence : ${h.reference || '—'}`,
+          font: T.fontBody,
+          size: tiny,
+          color: '333333',
+        }),
+      ],
+    }),
+  ]
 }
 
 function revisionTable(doc: EdfDigitDocument): Table {
@@ -626,8 +851,8 @@ export async function buildEdfDigitDocxDocument(
   const children: FileChild[] = []
   const nums = computeSectionNumbers(doc.sections)
 
-  children.push(...coverBlockDocx(doc.header))
   children.push(secondaryMetaTable(doc))
+  children.push(...inlineFieldParagraphs(doc.header))
   children.push(
     new Paragraph({
       heading: HeadingLevel.HEADING_1,
@@ -900,57 +1125,10 @@ export async function buildEdfDigitDocxDocument(
     }
   }
 
-  const hf = doc.header
-  const pg = hf.pageCount?.trim() ? hf.pageCount : '?'
-  children.push(
-    new Paragraph({
-      spacing: { before: 360, after: 80 },
-      shading: { fill: UNITEP_BAND, type: ShadingType.CLEAR },
-      children: [
-        new TextRun({
-          text: 'Document DIGIT Accessibilité :',
-          bold: true,
-          color: '00539F',
-          font: T.fontBody,
-          size: T.halfPt.small,
-        }),
-      ],
-    }),
-    new Paragraph({
-      shading: { fill: UNITEP_BAND, type: ShadingType.CLEAR },
-      children: [
-        new TextRun({
-          text: hf.title || '—',
-          bold: true,
-          color: UNITEP_ORANGE_TITLE,
-          font: T.fontBody,
-          size: T.halfPt.body,
-        }),
-      ],
-    }),
-    new Paragraph({
-      shading: { fill: UNITEP_BAND, type: ShadingType.CLEAR },
-      children: [
-        new TextRun({
-          text: `Page 1 / ${pg} · Référence : ${hf.reference || '—'}`,
-          font: T.fontBody,
-          size: T.halfPt.small,
-          color: '333333',
-        }),
-      ],
-    }),
-    new Paragraph({
-      shading: { fill: UNITEP_BAND, type: ShadingType.CLEAR },
-      children: [
-        new TextRun({
-          text: UNITEP_COPYRIGHT,
-          font: T.fontBody,
-          size: Math.round(T.halfPt.small * 0.85),
-          color: '222222',
-        }),
-      ],
-    }),
-  )
+  const firstHeader = new Header({ children: coverBlockDocx(doc.header) })
+  const firstFooter = new Footer({ children: coverFooterDocx(doc.header) })
+  const mainHeader = new Header({ children: defaultHeaderDocx(doc.header) })
+  const mainFooter = new Footer({ children: defaultFooterDocx(doc.header) })
 
   return new Document({
     title: doc.header.title || 'Document DIGIT',
@@ -959,14 +1137,25 @@ export async function buildEdfDigitDocxDocument(
     sections: [
       {
         properties: {
+          titlePage: true,
           page: {
             margin: {
-              top: convertInchesToTwip(0.8),
-              bottom: convertInchesToTwip(0.8),
-              left: convertInchesToTwip(0.95),
-              right: convertInchesToTwip(0.95),
+              top: convertInchesToTwip(1.05),
+              bottom: convertInchesToTwip(1.2),
+              left: convertInchesToTwip(0.75),
+              right: convertInchesToTwip(0.75),
+              header: convertInchesToTwip(0.35),
+              footer: convertInchesToTwip(0.35),
             },
           },
+        },
+        headers: {
+          default: mainHeader,
+          first: firstHeader,
+        },
+        footers: {
+          default: mainFooter,
+          first: firstFooter,
         },
         children,
       },

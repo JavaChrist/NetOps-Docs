@@ -35,10 +35,11 @@ export function EdfDigitPreview({ doc }: { doc: EdfDigitDocument }) {
   const h = doc.header
 
   const secondaryRows: [string, string][] = [
-    ['Entité émettrice', h.issuingEntity],
     ['Résumé', h.summary],
     ['Documents associés', h.relatedDocuments],
-    ['Type de document', h.documentType],
+  ]
+  const inlineFields: [string, string][] = [
+    ['Type', h.documentType],
     ['Processus', h.process],
     ["Périmètre d'application", h.applicationScope],
     ["Date d'applicabilité", h.applicabilityDate],
@@ -90,7 +91,7 @@ export function EdfDigitPreview({ doc }: { doc: EdfDigitDocument }) {
                   className="border border-black px-2 py-2 text-center align-middle"
                 >
                   <div className="flex justify-center">
-                    <EdfHeaderLogoLockup iconSize={40} />
+                    <EdfHeaderLogoLockup width={96} />
                   </div>
                 </td>
                 <td className="border border-black px-2 py-2 text-center align-middle">
@@ -125,22 +126,15 @@ export function EdfDigitPreview({ doc }: { doc: EdfDigitDocument }) {
               </tr>
             </tbody>
           </table>
-          <p className="m-0 mt-2 text-[9.5pt] font-semibold">{UNITEP_DTEO_ADDRESS}</p>
-          <p className="m-0 mt-1 text-[9.5pt] text-neutral-800">
-            Page 1 / {h.pageCount?.trim() ? h.pageCount : '?'}
-          </p>
         </div>
-        <div className="bg-white px-3 pb-2 pt-2">
-          <p className="m-0 text-[8.5pt] leading-snug text-neutral-900">
-            {UNITEP_COPYRIGHT}
+        <div className="bg-white px-3 pt-3 pb-2">
+          <p className="m-0 text-[10pt] font-bold uppercase leading-snug tracking-wide text-black">
+            {UNITEP_DIRECTION_LINE}{' '}
+            <span className="font-bold">{UNITEP_METIERS}</span>{' '}
+            <span className="font-normal normal-case tracking-normal">
+              Entité émettrice : {h.issuingEntity || '—'}
+            </span>
           </p>
-          <p className="m-0 mt-1 text-[8.5pt] leading-snug text-neutral-900">
-            {UNITEP_EDF_SA_LEGAL}
-          </p>
-          <p className="m-0 mt-2 text-[8.5pt] font-bold uppercase leading-tight tracking-wide">
-            {UNITEP_DIRECTION_LINE}
-          </p>
-          <p className="m-0 mt-1 text-[11pt] font-bold tracking-wide">{UNITEP_METIERS}</p>
         </div>
       </header>
 
@@ -149,21 +143,21 @@ export function EdfDigitPreview({ doc }: { doc: EdfDigitDocument }) {
         style={{ ...bc, borderWidth: 1, borderStyle: 'solid' }}
       >
         <colgroup>
-          <col style={{ width: '35%' }} />
-          <col style={{ width: '65%' }} />
+          <col style={{ width: '22%' }} />
+          <col style={{ width: '78%' }} />
         </colgroup>
         <tbody>
           {secondaryRows.map(([k, v]) => (
             <tr key={k}>
               <th
-                className="border px-2 py-1.5 text-left align-top font-semibold"
-                style={{ ...bc, backgroundColor: U.headerGray, color: U.text }}
+                className="border border-black px-2 py-1.5 text-left align-top font-normal"
+                style={{ backgroundColor: '#ffffff' }}
               >
                 {k}
               </th>
               <td
-                className="border px-2 py-1.5 align-top whitespace-pre-wrap"
-                style={{ ...bc, backgroundColor: '#ffffff' }}
+                className="border border-black px-2 py-1.5 align-top whitespace-pre-wrap"
+                style={{ backgroundColor: '#ffffff' }}
               >
                 {v || '—'}
               </td>
@@ -171,6 +165,14 @@ export function EdfDigitPreview({ doc }: { doc: EdfDigitDocument }) {
           ))}
         </tbody>
       </table>
+
+      <div className="px-3 pt-3 pb-1 text-[10pt] leading-snug text-black">
+        {inlineFields.map(([label, value]) => (
+          <p key={label} className="m-0 mt-1">
+            {label} : {value || '—'}
+          </p>
+        ))}
+      </div>
 
       <section className="border-b border-solid px-3 py-3" style={{ borderColor: U.border }}>
         <h2
@@ -392,6 +394,21 @@ export function EdfDigitPreview({ doc }: { doc: EdfDigitDocument }) {
             ))}
           </ul>
         </div>
+      </section>
+
+      <section
+        className="border-b border-solid px-3 py-3 text-[8.5pt] leading-snug text-black"
+        style={{ borderColor: U.border }}
+      >
+        <div className="flex items-center gap-3">
+          <EdfHeaderLogoLockup width={64} />
+          <p className="m-0 font-semibold">{UNITEP_DTEO_ADDRESS}</p>
+        </div>
+        <p className="m-0 mt-2 text-[9.5pt]">
+          Page 1 / {h.pageCount?.trim() ? h.pageCount : '?'}
+        </p>
+        <p className="m-0 mt-2">{UNITEP_COPYRIGHT}</p>
+        <p className="m-0 mt-1">{UNITEP_EDF_SA_LEGAL}</p>
       </section>
 
       <nav
